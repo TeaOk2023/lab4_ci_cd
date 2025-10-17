@@ -1,0 +1,74 @@
+﻿@page "/readers/delete"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удаление</PageTitle>
+
+<h1>Удаление</h1>
+
+<p>Вы уверены что хотите удалить?</p>
+<div>
+    <hr />
+    @if (reader is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Фамилия</dt>
+            <dd class="col-sm-10">@reader.LastName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Имя</dt>
+            <dd class="col-sm-10">@reader.FirstName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Отчество</dt>
+            <dd class="col-sm-10">@reader.MiddleName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата рождения</dt>
+            <dd class="col-sm-10">@reader.BirthDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Адрес</dt>
+            <dd class="col-sm-10">@reader.Address</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Телефон</dt>
+            <dd class="col-sm-10">@reader.Phone</dd>
+        </dl>
+        <EditForm method="post" Model="reader" OnValidSubmit="DeleteReader" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(reader is null)">Удалить</button> |
+            <a href="/readers">Вернуться обратно</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Reader? reader;
+
+    [SupplyParameterFromQuery]
+    private int ReaderId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        reader = await context.Reader.FirstOrDefaultAsync(m => m.ReaderId == ReaderId);
+
+        if (reader is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteReader()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Reader.Remove(reader!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/readers");
+    }
+}

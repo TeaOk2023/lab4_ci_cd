@@ -1,0 +1,67 @@
+﻿@page "/rentbooks"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Blazor_lab1.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Список арендованных книг</PageTitle>
+
+<h1>Список арендованных книг</h1>
+
+@if(op == 1)
+{
+    <p>
+        <a href="books">Возврат к списку книг</a>
+    </p>
+}
+else
+{
+    <p>
+        <a href="readers">Возврат к списку читателей</a>
+    </p>
+}
+
+<p>
+    <a href="@($"rentbooks/create?id={id}&op={op}")">Добавить</a>
+</p>
+
+<QuickGrid Class="table" Items="context.RentBook.Include(d => d.Book).Include(d => d.Reader).Where(d => op == 1?d.BookId == id:d.ReaderId == id)">
+    <PropertyColumn Title="Дата аренды" Property="rentbook => rentbook.RentDate" />
+    <PropertyColumn Title="Дата возврата" Property="rentbook => rentbook.ReturnDate" />
+    <PropertyColumn Title="Читатель" Property="rentbook => rentbook.Reader!.LastName" />
+    <PropertyColumn Title="Книга" Property="rentbook => rentbook.Book!.Title"/>
+
+    <TemplateColumn Context="rentbook">
+        <a href="@($"rentbooks/edit?rentbookid={rentbook.RentBookId}&op={op}")">Редактировать</a> |
+        <a href="@($"rentbooks/details?rentbookid={rentbook.RentBookId}&op={op}")">Подробнее</a> |
+        <a href="@($"rentbooks/delete?rentbookid={rentbook.RentBookId}&op={op}")">Удалить</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int? id { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int? op { get; set; }
+
+    public IEnumerable<Book> books = default!;
+
+    public IEnumerable<Reader> readers = default!;
+
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+
+        if (id == null || op == null)
+        {
+            NavigationManager.NavigateTo("Not found");
+        }
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

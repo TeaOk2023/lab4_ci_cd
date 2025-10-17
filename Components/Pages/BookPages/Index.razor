@@ -1,0 +1,41 @@
+﻿@page "/books"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Blazor_lab1.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+
+
+<PageTitle>Кгиги</PageTitle>
+
+<h1>Список книг</h1>
+
+<p>
+    <a href="books/create">Добавить книгу</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Book">
+    <PropertyColumn Title="Название" Property="book => book.Title" />
+    <PropertyColumn Title="Автор" Property="book => book.Author" />
+    <PropertyColumn Title="Год публикации" Property="book => book.PublicationYear" />
+    <PropertyColumn Title="Издательство" Property="book => book.Publisher" />
+    <PropertyColumn Title="Категория" Property="book => book.CategoryCode" />
+
+    <TemplateColumn Context="book">
+        <a href="@($"rentbooks?id={book.BookId}&op=1")">Арендованные книги</a> |
+        <a href="@($"books/edit?bookid={book.BookId}")">Редактировать</a> |
+        <a href="@($"books/details?bookid={book.BookId}")">Подробнее</a> |
+        <a href="@($"books/delete?bookid={book.BookId}")">Удалить</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

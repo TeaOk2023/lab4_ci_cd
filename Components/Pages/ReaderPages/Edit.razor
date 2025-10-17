@@ -1,0 +1,113 @@
+﻿@page "/readers/edit"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактирование</PageTitle>
+
+<h1>Редактирование читателя</h1>
+
+<hr />
+@if (Reader is null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Reader" OnValidSubmit="UpdateReader" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Reader.ReaderId" value="@Reader.ReaderId" />
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">Фамилия:</label>
+                    <InputText id="lastname" @bind-Value="Reader.LastName" class="form-control" />
+                    <ValidationMessage For="() => Reader.LastName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">Имя:</label>
+                    <InputText id="firstname" @bind-Value="Reader.FirstName" class="form-control" />
+                    <ValidationMessage For="() => Reader.FirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="middlename" class="form-label">Отчетство:</label>
+                    <InputText id="middlename" @bind-Value="Reader.MiddleName" class="form-control" />
+                    <ValidationMessage For="() => Reader.MiddleName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="birthdate" class="form-label">Дата рождения:</label>
+                    <InputDate id="birthdate" @bind-Value="Reader.BirthDate" class="form-control" />
+                    <ValidationMessage For="() => Reader.BirthDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Адрес:</label>
+                    <InputText id="address" @bind-Value="Reader.Address" class="form-control" />
+                    <ValidationMessage For="() => Reader.Address" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Телефон:</label>
+                    <InputText id="phone" @bind-Value="Reader.Phone" class="form-control" />
+                    <ValidationMessage For="() => Reader.Phone" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/readers">К списку читателей</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int ReaderId { get; set; }
+
+    [SupplyParameterFromForm]
+    private Reader? Reader { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Reader ??= await context.Reader.FirstOrDefaultAsync(m => m.ReaderId == ReaderId);
+
+        if (Reader is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateReader()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Reader!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ReaderExists(Reader!.ReaderId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/readers");
+    }
+
+    private bool ReaderExists(int readerid)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Reader.Any(e => e.ReaderId == readerid);
+    }
+}

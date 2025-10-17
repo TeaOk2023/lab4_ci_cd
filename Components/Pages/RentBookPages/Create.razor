@@ -1,0 +1,122 @@
+﻿@page "/rentbooks/create"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавление</PageTitle>
+
+<h1>Добавление</h1>
+
+<h2>Арендованные книги</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="RentBook" OnValidSubmit="AddRentBook" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="rentdate" class="form-label">Дата аренды:</label> 
+                <InputDate id="rentdate" @bind-Value="RentBook.RentDate" class="form-control" /> 
+                <ValidationMessage For="() => RentBook.RentDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="returndate" class="form-label">Дата возврата:</label> 
+                <InputDate id="returndate" @bind-Value="RentBook.ReturnDate" class="form-control" /> 
+                <ValidationMessage For="() => RentBook.ReturnDate" class="text-danger" /> 
+            </div>   
+            @if (op == 1) 
+            { 
+                <div class="mb-3">
+                    <label for="readerid" class="form-label">Читатель:</label>
+                    <InputSelect id = "readerid" @bind-Value="RentBook.ReaderId" class="form-control">
+                        <option value="">...</option>
+
+                        @if (readers != null)
+                        {
+                            @foreach (var reader in readers)
+                            {
+                                <option value="@reader.ReaderId"> @reader.LastName @reader.FirstName </option>
+                            } 
+                        }
+                    </InputSelect>
+
+                    <ValidationMessage For="() => RentBook.ReaderId" class="text-danger" />
+
+                </div>
+                <input type="hidden" @bind="RentBook.BookId" />
+            }
+
+            @if (op == 2)
+            {
+                <div class="mb-3">
+                    <label for="bookid" class="form-label">Книга:</label>
+                    <InputSelect id="bookid" @bind-Value="RentBook.BookId" class="form-control">
+                        <option value="">...</option>
+
+                        @if (books != null)
+                        {
+                            @foreach (var book in books)
+                            {
+                                <option value="@book.BookId"> @book.Title</option>
+                            }
+                        }
+                    </InputSelect>
+
+                    <ValidationMessage For="() => RentBook.BookId" class="text-danger" />
+                </div>
+                <input type="hidden" @bind="RentBook.ReaderId" />
+            }
+            
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="@($"rentbooks?id={id}&op={op}")">К списку арендованных книг</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int? id { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int? op { get; set; }
+
+    public IEnumerable<Book> books = default!;
+
+    public IEnumerable<Reader> readers = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (id == null || op == null)
+        {
+            NavigationManager.NavigateTo("Not found");
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        if (op == 1)
+        {
+            readers = await context.Reader.ToListAsync();
+            RentBook.BookId = id;
+        }
+        else
+        {         
+            books = await context.Book.ToListAsync(); 
+            RentBook.ReaderId = id;
+        }
+    }
+
+    [SupplyParameterFromForm]
+    private RentBook RentBook { get; set; } = new();
+
+    private async Task AddRentBook()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.RentBook.Add(RentBook);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/rentbooks?"+"id="+id.ToString()+"&op="+op.ToString());
+    }
+}

@@ -1,0 +1,70 @@
+﻿@page "/books/delete"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удаление</PageTitle>
+
+<h1>Удаление</h1>
+
+<p>Вы уверены что хотите удалить?</p>
+<div>
+    <hr />
+    @if (book is null)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Название</dt>
+            <dd class="col-sm-10">@book.Title</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Автор</dt>
+            <dd class="col-sm-10">@book.Author</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Год публикации</dt>
+            <dd class="col-sm-10">@book.PublicationYear</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Издательство</dt>
+            <dd class="col-sm-10">@book.Publisher</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Категория</dt>
+            <dd class="col-sm-10">@book.CategoryCode</dd>
+        </dl>
+        <EditForm method="post" Model="book" OnValidSubmit="DeleteBook" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(book is null)">Удалить</button> |
+            <a href="/books">Вернуться обратно</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Book? book;
+
+    [SupplyParameterFromQuery]
+    private int BookId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        book = await context.Book.FirstOrDefaultAsync(m => m.BookId == BookId);
+
+        if (book is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteBook()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Book.Remove(book!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/books");
+    }
+}

@@ -1,0 +1,66 @@
+﻿@page "/rentbooks/details"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Просмотр</PageTitle>
+
+<h1>Просмотр</h1>
+
+<div>
+    <hr />
+    @if (rentbook is null)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Дата аренды</dt>
+            <dd class="col-sm-10">@rentbook.RentDate</dd>
+            <dt class="col-sm-2">Дата возврата</dt>
+            <dd class="col-sm-10">@rentbook.ReturnDate</dd>
+            <dt class="col-sm-2">Читатель ИД</dt>
+            <dd class="col-sm-10">@rentbook!.Reader!.FirstName</dd>
+            <dt class="col-sm-2">Книга ИД</dt>
+            <dd class="col-sm-10">@rentbook!.Book!.Title</dd>
+        </dl>
+        <div>
+            <a href="@($"/rentbooks/edit?rentbookid={rentbook.RentBookId}&op={op}")">Редактирование</a> |
+            <a href="@($"/rentbooks?op={op}&id={id}")">К списку арендованных книг</a>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int? op { get; set; }
+
+    private int? id { get; set; }
+
+    private RentBook? rentbook;
+
+    [SupplyParameterFromQuery]
+    private int RentBookId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        rentbook = await context.RentBook.Include(d => d.Book).Include(d => d.Reader).FirstOrDefaultAsync(m => m.RentBookId == RentBookId);
+
+        if (rentbook is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+
+        if (op == 1)
+        {
+            id = rentbook!.BookId;
+        }
+        else
+        {
+            id = rentbook!.ReaderId;
+        }
+        
+    }
+}

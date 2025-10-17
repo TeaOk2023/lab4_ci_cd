@@ -1,0 +1,55 @@
+﻿@page "/readers/details"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Просмотр</PageTitle>
+
+<h1>Читатель</h1>
+
+<div>
+    <hr />
+    @if (reader is null)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Фамилия</dt>
+            <dd class="col-sm-10">@reader.LastName</dd>
+            <dt class="col-sm-2">Имя</dt>
+            <dd class="col-sm-10">@reader.FirstName</dd>
+            <dt class="col-sm-2">Отчество</dt>
+            <dd class="col-sm-10">@reader.MiddleName</dd>
+            <dt class="col-sm-2">Дата рождения</dt>
+            <dd class="col-sm-10">@reader.BirthDate</dd>
+            <dt class="col-sm-2">Адрес</dt>
+            <dd class="col-sm-10">@reader.Address</dd>
+            <dt class="col-sm-2">Телефон</dt>
+            <dd class="col-sm-10">@reader.Phone</dd>
+        </dl>
+        <div>
+            <a href="@($"/readers/edit?readerid={reader.ReaderId}")">Редактировать</a> |
+            <a href="@($"/readers")">К списку читателей</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Reader? reader;
+
+    [SupplyParameterFromQuery]
+    private int ReaderId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        reader = await context.Reader.FirstOrDefaultAsync(m => m.ReaderId == ReaderId);
+
+        if (reader is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

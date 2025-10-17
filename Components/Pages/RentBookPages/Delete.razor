@@ -1,0 +1,82 @@
+﻿@page "/rentbooks/delete"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удаление</PageTitle>
+
+<h1>Удаление</h1>
+
+<p>Вы уверены что хотите удалить?</p>
+<div>
+    <hr />
+    @if (rentbook is null)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    
+    
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Дата аренды</dt>
+            <dd class="col-sm-10">@rentbook.RentDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата возврата</dt>
+            <dd class="col-sm-10">@rentbook.ReturnDate</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Читатель ИД</dt>
+            <dd class="col-sm-10">@rentbook!.Reader!.FirstName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Книга ИД</dt>
+            <dd class="col-sm-10">@rentbook!.Book!.Title</dd>
+        </dl>
+        <EditForm method="post" Model="rentbook" OnValidSubmit="DeleteRentBook" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(rentbook is null)">Удаление</button> |
+            <a href="@($"/rentbooks?op={op}&id={id}")">К списку арендованных книг</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private RentBook? rentbook;
+
+    [SupplyParameterFromQuery]
+    private int RentBookId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private int? op { get; set; }
+
+    private int? id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        rentbook = await context.RentBook.Include(d => d.Book).Include(d => d.Reader).FirstOrDefaultAsync(m => m.RentBookId == RentBookId);
+
+        if (rentbook is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+
+        if (op == 1)
+        {
+            id = rentbook!.BookId;
+        }
+        else
+        {
+            id = rentbook!.ReaderId;
+        }
+    }
+
+    private async Task DeleteRentBook()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.RentBook.Remove(rentbook!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/rentbooks?" + "id=" + id.ToString() + "&op=" + op.ToString()); ;
+    }
+}

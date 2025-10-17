@@ -1,0 +1,63 @@
+﻿@page "/books/create"
+@using Microsoft.EntityFrameworkCore
+@using Blazor_lab1.Data
+@inject IDbContextFactory<Blazor_lab1.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавить</PageTitle>
+
+<h1>Добавить книгу</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Book" OnValidSubmit="AddBook" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="title" class="form-label">Название:</label> 
+                <InputText id="title" @bind-Value="Book.Title" class="form-control" /> 
+                <ValidationMessage For="() => Book.Title" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="author" class="form-label">Автор:</label> 
+                <InputText id="author" @bind-Value="Book.Author" class="form-control" /> 
+                <ValidationMessage For="() => Book.Author" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="publicationyear" class="form-label">Год публикации:</label> 
+                <InputNumber id="publicationyear" @bind-Value="Book.PublicationYear" class="form-control" /> 
+                <ValidationMessage For="() => Book.PublicationYear" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="publisher" class="form-label">Издательство:</label> 
+                <InputText id="publisher" @bind-Value="Book.Publisher" class="form-control" /> 
+                <ValidationMessage For="() => Book.Publisher" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="categorycode" class="form-label">Категория:</label> 
+                <InputText id="categorycode" @bind-Value="Book.CategoryCode" class="form-control" />
+                <ValidationMessage For="() => Book.CategoryCode" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/books">Возврат к списку книг</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Book Book { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddBook()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Book.Add(Book);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/books");
+    }
+}
