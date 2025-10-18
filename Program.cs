@@ -33,11 +33,29 @@ if (!app.Environment.IsDevelopment())
     app.UseMigrationsEndPoint();
 }
 
-using (var scope = app.Services.CreateScope())
+try
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    
+    if (dbContext.Database.CanConnect())
+    {
+        Console.WriteLine("Database is available. Running migrations...");
+        dbContext.Database.Migrate();
+        Console.WriteLine("Migrations completed successfully.");
+    }
+    else
+    {
+        Console.WriteLine("Database is not available. Skipping migrations.");
+    }
 }
+catch (Exception ex)
+{
+    // Не падаем
+    Console.WriteLine($"Database connection failed: {ex.Message}");
+    Console.WriteLine("Skipping migrations. Application will continue without database.");
+}
+
 app.UseHttpsRedirection();
 
 
