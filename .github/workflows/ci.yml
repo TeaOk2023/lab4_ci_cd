@@ -54,11 +54,11 @@ jobs:
         with:
           name: build-log
           path: build-log.txt
-  # Job 3: Публикация (только для main ветки)
+  # Job 3: Публикация (только для master ветки)
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
