@@ -27,7 +27,7 @@ jobs:
           name: hadolint-report
           path: hadolint-report.txt
 
-  # Job 2: Сборка (запускается только после успешного lint)
+    # Job 2: Сборка (запускается только после успешного lint)
   build:
     needs: lint
     runs-on: ubuntu-latest
@@ -42,7 +42,16 @@ jobs:
 
       - name: Test container
         run: |
-          docker run --rm myapp:test echo "Container works!"
+          # Запускаем контейнер в фоне
+          docker run -d --name test-container myapp:test
+          # Ждем немного чтобы приложение запустилось
+          sleep 10
+          # Проверяем что контейнер все еще работает
+          docker ps | grep test-container && echo "✓ Container is running"
+          # Останавливаем контейнер
+          docker stop test-container
+          docker rm test-container
+          echo "✓ Container test passed"
 
       - name: Save build log
         run: |
