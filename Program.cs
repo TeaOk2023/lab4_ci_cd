@@ -10,17 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-
 builder.Services.AddQuickGridEntityFrameworkAdapter();
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
 
 var app = builder.Build();
 
@@ -33,7 +29,7 @@ if (!app.Environment.IsDevelopment())
     app.UseMigrationsEndPoint();
 }
 
-// Замените блок try-catch на этот код:
+// Безопасное применение миграций
 try
 {
     using var scope = app.Services.CreateScope();
@@ -73,9 +69,10 @@ catch (Exception ex)
 }
 
 app.UseHttpsRedirection();
-
-
 app.UseAntiforgery();
+
+//endpoint для healthcheck
+app.MapGet("/", () => "Blazor Application is running!");
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
