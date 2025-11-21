@@ -10,4 +10,4 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
  WORKDIR /app
  COPY --from=build /app/publish .
  EXPOSE 80
- CMD ["dotnet", "Blazor_lab1.dll", "--urls", "http://0.0.0.0:80"]
+ ENTRYPOINT ["dotnet", "Blazor_lab1.dll", "--urls", "http://0.0.0.0:80"]
